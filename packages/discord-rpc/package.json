@@ -68,7 +68,7 @@
     "@types/node": "^22.19.1",
     "@types/ws": "^8.18.1",
     "chai": "^5.3.3",
-    "electron": "^33.4.11",
+    "electron": "^35.7.5",
     "eslint": "^9.39.1",
     "jest": "^29.7.0",
     "jest-junit": "^16.0.0",
