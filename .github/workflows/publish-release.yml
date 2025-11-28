@@ -28,6 +28,6 @@ jobs:
         if: github.repository_owner == 'strivo-dev'
         run: |
           pnpm --filter ./packages/discord-rpc i
-          pnpm --filter ./packages/discord-rpc publish --provenance --no-git-checks
+          pnpm --filter ./packages/discord-rpc publish --provenance --access --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
