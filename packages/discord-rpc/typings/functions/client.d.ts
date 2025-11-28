@@ -133,11 +133,17 @@ export type ActivityArgs = {
     /** Tooltip text for the large image asset. */
     largeImageText?: string;
 
+    /** = */
+    largeImageUrl?: string;
+
     /** The key for the small image asset displayed in the activity. */
     smallImageKey?: string;
 
     /** Tooltip text for the small image asset. */
     smallImageText?: string;
+
+    /** = */
+    smallImageUrl?: string;
 
     /** The current size of the party the user is in. */
     partySize?: number;

@@ -12,11 +12,11 @@ const EventEmitter = require('events');
 const fetch = require('node-fetch');
 const {
   uuid
-} = require('../functions/util.js');
+} = require('../../functions/util.js');
 const {
   RpcError,
   errorCode
-} = require('../error');
+} = require('../../error');
 
 const OPCodes = {
   HANDSHAKE: 0,

@@ -9,7 +9,7 @@
 
 const EventEmitter = require('events');
 const fetch = require('node-fetch');
-const transports = require('../transports');
+const transports = require('../options/transports');
 const {
   setTimeout,
   clearTimeout
@@ -348,12 +348,15 @@ class RpcClient extends EventEmitter {
     if (
       args.largeImageKey || args.largeImageText
       || args.smallImageKey || args.smallImageText
+      || args.largeImageUrl || args.smallImageUrl
     ) {
       assets = {
         large_image: args.largeImageKey,
         large_text: args.largeImageText,
+        large_url: args.largeImageUrl,
         small_image: args.smallImageKey,
         small_text: args.smallImageText,
+        small_url: args.smallImageUrl,
       };
     };
     if (args.partySize || args.partyId || args.partyMax) {

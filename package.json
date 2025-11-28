@@ -1,13 +1,13 @@
 {
 	"$schema": "https://json.schemastore.org/package.json",
-	"name": "@sitcommunity/discord-rpc",
+	"name": "@strivo-dev/discord-rpc",
 	"version": "0.0.0",
-	"description": "Discord-RPC is a powerful library developed by SITCommunity that enables developers to seamlessly integrate Rich Presence functionality into Discord applications or from Client ID",
+	"description": "Discord-RPC is a powerful library developed by Strivo Development that enables developers to seamlessly integrate Rich Presence functionality into Discord applications or from Client ID",
 	"private": true,
 	"scripts": {},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/SITCommunity/discord-rpc.git"
+		"url": "git+https://github.com/strivo-dev/discord-rpc.git"
 	},
 	"keywords": [
 		"discord-rpc",
@@ -15,19 +15,19 @@
 		"javascript"
 	],
 	"bugs": {
-		"url": "https://github.com/SITCommunity/discord-rpc/issues"
+		"url": "https://github.com/strivo-dev/discord-rpc/issues"
 	},
 	"contributors": [
-		"BrokenEdtz <brokenedtz@cyrateam.xyz>"
+		"BrokenEdtz <nokarin@strivo.xyz>"
 	],
-	"author": "brokenedtz",
+	"author": "nokarin",
 	"license": "MIT",
-	"homepage": "https://cyrateam.xyz/project/discord-rpc",
-	"funding": "https://github.com/SITCommunity/discord-rpc?sponsor",
+	"homepage": "https://github.com/strivo-dev/discord-rpc",
+	"funding": "https://github.com/strivo-dev/discord-rpc?sponsor",
 	"devDependencies": {
-		"prettier": "^3.3.3",
-		"turbo": "^2.0.14",
-		"typescript": "^5.6.3"
+		"prettier": "^3.7.1",
+		"turbo": "^2.6.1",
+		"typescript": "^5.9.3"
 	},
 	"type": "module",
 	"engines": {
