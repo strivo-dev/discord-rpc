@@ -2,7 +2,7 @@
 	"$schema": "https://json.schemastore.org/package.json",
 	"name": "@strivo-dev/discord-rpc",
 	"version": "0.0.0",
-	"description": "Discord-RPC is a powerful library developed by Strivo Development that enables developers to seamlessly integrate Rich Presence functionality into Discord applications or from Client ID",
+	"description": "discord-rpc is a powerful library created by Discord, allowing developers to integrate Rich Presence functionality into their Discord applications smoothly.",
 	"private": true,
 	"scripts": {},
 	"repository": {
@@ -18,9 +18,9 @@
 		"url": "https://github.com/strivo-dev/discord-rpc/issues"
 	},
 	"contributors": [
-		"BrokenEdtz <nokarin@strivo.xyz>"
+		"noakrin-dev <nokarin@strivo.xyz>"
 	],
-	"author": "nokarin",
+	"author": "nokarin-dev",
 	"license": "MIT",
 	"homepage": "https://github.com/strivo-dev/discord-rpc",
 	"funding": "https://github.com/strivo-dev/discord-rpc?sponsor",

@@ -2,6 +2,17 @@
 
 All notable changes from Discord-RPC will be documented in this file.
 
+## [1.6.0] - 2025-11-28
+
+### Bug Fixed
+- IPC transport implementation and update client functionality
+
+### Added
+- ActivityArgs type with largeImageUrl and smallImageUrl properties
+
+### Improvement
+- Update dependencies in pnpm-lock.yaml
+
 ## [1.5.9] - 2025-01-26
 
 ### Bug Fixes

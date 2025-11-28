@@ -38,11 +38,7 @@ pnpm install dc-rpc
 const { RpcClient } = require('dc-rpc');
 
 // Create an instance of Discord-RPC
-<<<<<<< HEAD
-const client = new RpcClient(); // removed websocket
-=======
 const client = new RpcClient();
->>>>>>> 29213f1 (refactor: update copyright and repository references to Strivo Development)
 
 // ================================================================
 
@@ -85,15 +81,4 @@ This Project under MIT License
 © 2019 - 2024 Strivo Development. All Rights Reserved
 ```
 
-<<<<<<< HEAD
-## Credits
-
-- Original: [Senophyx]
-- Maintainer: [brokenedtz]
-
-[Discord-RPC]: https://www.npmjs.com/package/dc-rpc
-[Senophyx]: https://github.com/Senophyx
-[brokenedtz]: https://github.com/brokenedtzjs
-=======
 [discord-rpc]: https://github.com/discordjs/RPC
->>>>>>> 29213f1 (refactor: update copyright and repository references to Strivo Development)

@@ -1,7 +1,7 @@
 /**
- * @author brokenedtzjs
+ * @author nokarin-dev
  * @license MIT
- * @copyright brokenedtzjs
+ * @copyright nokarin-dev
  * @file index.js
  */
 

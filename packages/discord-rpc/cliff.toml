@@ -60,5 +60,5 @@ topo_order = false
 sort_commits = "newest"
 
 [remote.github]
-owner = "SITCommunity"
+owner = "strivo-dev"
 repo = "discord-rpc"
