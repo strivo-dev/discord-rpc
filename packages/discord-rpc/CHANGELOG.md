@@ -13,6 +13,9 @@ All notable changes from Discord-RPC will be documented in this file.
 ### Improvement
 - Update dependencies in pnpm-lock.yaml
 
+### Removed
+- Obsolete typings file (index.test-d.ts).
+
 ## [1.5.9] - 2025-01-26
 
 ### Bug Fixes
