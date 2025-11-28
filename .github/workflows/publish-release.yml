@@ -25,7 +25,7 @@ jobs:
         uses: ./packages/actions/pnpm
 
       - name: Publish package
-        if: github.repository_owner == 'sitcommunity'
+        if: github.repository_owner == 'strivo-dev'
         run: |
           pnpm --filter ./packages/discord-rpc i
           pnpm --filter ./packages/discord-rpc publish --provenance --no-git-checks
