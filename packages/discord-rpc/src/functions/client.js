@@ -8,12 +8,9 @@
 'use strict';
 
 const EventEmitter = require('events');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch').default;
 const transports = require('../options/transports');
-const {
-  setTimeout,
-  clearTimeout
-} = require('timers');
+const { setTimeout, clearTimeout } = require('timers');
 const {
   RPCCommands,
   RPCEvents,
@@ -31,13 +28,67 @@ const {
   RpcTypeError,
   errorCode
 } = require('../error');
+const { RPCScopes, ScopePresets, ScopeHelper } = require('./scopes.js');
 
 function subKey(event, args) {
   return `${event}${JSON.stringify(args)}`;
 };
 
+class RequestQueue {
+  constructor(maxConcurrent = 5) {
+    this.queue = [];
+    this.running = 0;
+    this.maxConcurrent = maxConcurrent;
+  }
+
+  async add(fn) {
+    if (this.running >= this.maxConcurrent) {
+      await new Promise(resolve => this.queue.push(resolve));
+    }
+
+    this.running++;
+    try {
+      return await fn();
+    } finally {
+      this.running--;
+      const next = this.queue.shift();
+      if (next) next();
+    }
+  }
+}
+
+class ResponseCache {
+  constructor(ttl = 5000) {
+    this.cache = new Map();
+    this.ttl = ttl;
+  }
+
+  set(key, value) {
+    this.cache.set(key, {
+      value,
+      expires: Date.now() + this.ttl,
+    });
+  }
+
+  get(key) {
+    const item = this.cache.get(key);
+    if (!item) return null;
+
+    if (Date.now() > item.expires) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return item.value;
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+}
+
 class RpcClient extends EventEmitter {
-  constructor() {
+  constructor(options = {}) {
     super();
 
     this.accessToken = null;
@@ -45,10 +96,33 @@ class RpcClient extends EventEmitter {
     this.application = null;
     this.user = null;
 
-    const Transport = transports['ipc'];
+    this.options = {
+      enableCache: options.enableCache || false,
+      batchDelay: options.batchDelay || 10,
+      cacheTTL: options.cacheTTL || 5000,
+      maxConcurrentRequests: options.maxConcurrentRequests || 5,
+      requestTimeout: options.requestTimeout || 10000,
+      autoReconnect: options.autoReconnect || false,
+      maxReconnectAttempts: options.maxReconnectAttempts || 3,
+      ...options,
+    };
+
+    this.setMaxListeners(options.maxListeners || 20);
+
+    this._batchQueue = [];
+    this._batchTimer = null;
+
+    this.requestQueue = new RequestQueue(this.options.maxConcurrentRequests);
+
+    if (this.options.enableCache) {
+      this.cache = new ResponseCache(this.options.cacheTTL);
+    }
+
+    this.reconnectAttempts = 0;
+    this.isReconnecting = false;
 
     this.fetch = (method, path, { data, query } = {}) =>
-      fetch(`${this.fetch.endpoint}${path}${query ? new URLSearchParams(query) : ''}`, {
+      fetch(`${this.endpoint}${path}${query ? new URLSearchParams(query) : ''}`, {
         method,
         body: data,
         headers: {
@@ -68,27 +142,32 @@ class RpcClient extends EventEmitter {
           return body;
         });
 
-    this.fetch.endpoint = 'https://discord.com/api';
-    this.transport = new Transport(this);
+    this.endpoint = 'https://discord.com/api';
     this.transport.on('message', this._onRpcMessage.bind(this));
     this._expecting = new Map();
     this._connectPromise = undefined;
+    this._boundListeners = new Map();
   };
 
   connect(clientId) {
     if (this._connectPromise) {
       return this._connectPromise;
     };
+
     this._connectPromise = new Promise((resolve, reject) => {
       this.clientId = clientId;
       const timeout = setTimeout(() => {
         reject(new RpcTimeout(errorCode.RpcTimeout));
-      }, 10e3);
+      }, this.options.requestTimeout);
+
       timeout.unref();
+
       this.once('connected', () => {
         clearTimeout(timeout);
+        this.reconnectAttempts = 0;
         resolve(this);
       });
+
       this.transport.once('close', (event) => {
         this._expecting.forEach((e) => {
           e.reject(new RpcError(
@@ -96,39 +175,120 @@ class RpcClient extends EventEmitter {
             `${event.code}: ${event.reason}`
           ));
         });
+
         this.emit('disconnected');
+        if (this.options.autoReconnect && !this.isReconnecting) {
+          this._tryReconnect(clientId);
+        }
+
         reject(new RpcError(
           errorCode.ConnectionError,
           `${event.code}: ${event.reason}`
         ));
       });
+
       this.transport.connect().catch(reject);
     });
+
     return this._connectPromise;
   };
 
   async login(loginOptions) {
     const { clientId, clientSecret } = loginOptions;
+    let { scopes } = loginOptions;
+
+    if (scopes) {
+      if (typeof scopes === 'string') {
+        const presetName = scopes.toUpperCase();
+
+        if (!ScopePresets[presetName]) {
+          const available = Object.keys(ScopePresets).join(', ');
+          throw new RpcError(
+            errorCode.InvalidScopePreset,
+            `Invalid scope preset: "${scopes}". Available: ${available}`
+          );
+        }
+        scopes = [...ScopePresets[presetName]];
+        this.emit('debug', `Using scope preset: ${loginOptions.scopes} = ${scopes.join(', ')}`);
+      }
+
+      if (!Array.isArray(scopes)) {
+        throw new RpcError(errorCode.InvalidScopeArray);
+      }
+
+      const validation = ScopeHelper.validateScopes(scopes);
+      if (!validation.valid) {
+        throw new RpcTypeError(errorCode.InvalidScope, validation.invalid);
+      }
+    }
     await this.connect(clientId);
-    if (!loginOptions.scopes) {
+
+    if (!scopes) {
       this.emit('ready');
       return this;
-    };
+    }
+
     const accessToken = await this.authorize({
       clientId,
       clientSecret,
-      scopes: loginOptions.scopes,
+      scopes,
     });
+
     return this.authenticate(accessToken);
   };
 
   request(cmd, args, evt) {
-    return new Promise((resolve, reject) => {
-      const nonce = uuid();
-      this.transport.send({ cmd, args, evt, nonce });
-      this._expecting.set(nonce, { resolve, reject });
+    return this.requestQueue.add(() => {
+      return new Promise((resolve, reject) => {
+        const nonce = uuid();
+
+        const timeout = setTimeout(() => {
+          this._expecting.delete(nonce);
+          reject(new RpcTimeout(errorCode.RpcTimeout));
+        }, this.options.requestTimeout);
+
+        this._expecting.set(nonce, {
+          resolve: (data) => {
+            clearTimeout(timeout);
+            resolve(data);
+          },
+          reject: (err) => {
+            clearTimeout(timeout);
+            reject(err);
+          },
+        });
+
+        this.transport.send({ cmd, args, evt, nonce });
+      });
     });
   };
+
+  async _tryReconnect(clientId) {
+    if (this.reconnectAttempts >= this.options.maxReconnectAttempts) {
+      this.emit('error', new RpcError(
+        errorCode.ConnectionFailed,
+        `Failed to reconnect after ${this.reconnectAttempts} attempts`
+      ));
+      return;
+    }
+
+    this.isReconnecting = true;
+    this.reconnectAttempts++;
+
+    this.emit('reconnecting', this.reconnectAttempts);
+
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+    await new Promise(resolve => setTimeout(resolve, delay));
+
+    try {
+      this._connectPromise = undefined;
+      await this.connect(clientId);
+      this.isReconnecting = false;
+      this.emit('reconnected');
+    } catch (e) {
+      this._tryReconnect(clientId);
+    }
+  }
 
   _onRpcMessage(message) {
     if (message.cmd === RPCCommands.DISPATCH && message.evt === RPCEvents.READY) {
@@ -138,11 +298,9 @@ class RpcClient extends EventEmitter {
       this.emit('connected');
     } else if (this._expecting.has(message.nonce)) {
       const { resolve, reject } = this._expecting.get(message.nonce);
+
       if (message.evt === 'RpcError') {
-        const e = new RpcError(
-          errorCode.MessageError,
-          message.data.message
-        );
+        const e = new RpcError(errorCode.MessageError, message.data.message);
         e.code = message.data.code;
         e.data = message.data;
         reject(e);
@@ -179,7 +337,7 @@ class RpcClient extends EventEmitter {
         client_secret: clientSecret,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: redirectUri,
+        ...(redirectUri ? { redirect_uri: redirectUri } : {}),
       }),
     });
     return response.access_token;
@@ -198,6 +356,50 @@ class RpcClient extends EventEmitter {
       });
   };
 
+  async batchRequest(requests) {
+    if (!this.options.enableBatching) {
+      return Promise.all(requests.map(r => this.request(r.cmd, r.args, r.evt)));
+    }
+
+    return new Promise((resolve) => {
+      this._batchQueue.push(...requests.map(r => ({
+        ...r,
+        resolve,
+      })));
+
+      if (this._batchTimer) {
+        clearTimeout(this._batchTimer);
+      }
+
+      this._batchTimer = setTimeout(() => {
+        this._processBatch();
+      }, this.options.batchDelay);
+    });
+  }
+
+  _processBatch() {
+    const batch = this._batchQueue.splice(0);
+    const promises = batch.map(item =>
+      this.request(item.cmd, item.args, item.evt)
+    );
+
+    Promise.all(promises).then(results => {
+      batch.forEach((item, i) => item.resolve(results[i]));
+    });
+  }
+
+  getScopes() {
+    return RPCScopes;
+  }
+
+  getScopePresets() {
+    return ScopePresets;
+  }
+
+  validateScopes(scopes) {
+    return ScopeHelper.validateScopes(scopes);
+  }
+
   getGuild(id, timeout) {
     return this.request(RPCCommands.GET_GUILD, { guild_id: id, timeout });
   };
@@ -209,6 +411,10 @@ class RpcClient extends EventEmitter {
   getChannel(id, timeout) {
     return this.request(RPCCommands.GET_CHANNEL, { channel_id: id, timeout });
   };
+
+  getSelectedVoiceChannel(timeout) {
+    return this.request(RPCCommands.GET_SELECTED_VOICE_CHANNEL, { timeout });
+  }
 
   async getChannels(id, timeout) {
     const { channels } = await this.request(RPCCommands.GET_CHANNELS, {
@@ -372,7 +578,7 @@ class RpcClient extends EventEmitter {
         spectate: args.spectateSecret,
       };
     };
-    if(args.type) {
+    if (args.type) {
       type = args.type;
     };
 
@@ -484,8 +690,42 @@ class RpcClient extends EventEmitter {
     };
   };
 
+  safeOn(event, handler) {
+    const wrapper = (...args) => {
+      try {
+        handler(...args);
+      } catch (error) {
+        this.emit('error', error);
+      }
+    };
+
+    this._boundListeners.set(handler, wrapper);
+    this.on(event, wrapper);
+
+    return () => this.removeListener(event, wrapper);
+  };
+
   async destroy() {
+    this._boundListeners.clear();
+    this.removeAllListeners();
+
+    if (this.cache) this.cache.clear();
+    this._expecting.clear();
+    this._subscriptions.clear();
+
     await this.transport.close();
   };
+
+  get transport() {
+    if (!this._transport) {
+      const Transport = transports;
+      this._transport = new Transport(this);
+    }
+    return this._transport;
+  }
 };
+
 module.exports = RpcClient;
+module.exports.RPCScopes = RPCScopes;
+module.exports.ScopePresets = ScopePresets;
+module.exports.ScopeHelper = ScopeHelper;

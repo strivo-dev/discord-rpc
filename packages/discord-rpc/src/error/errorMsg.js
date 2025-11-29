@@ -21,6 +21,11 @@ const errorMsg = {
     [errorCode.ConnectionFailed]: 'Could not connect to RPC',
     [errorCode.MissingEndpoint]: 'Could not find endpoint',
     [errorCode.FailLoadProtocol]: (e) => `Protocol registration failed. Details: ${e}`,
+    [errorCode.InvalidScope]: (scopes) => `Invalid scopes: ${scopes.join(', ')}. Run ScopeHelper.listAll() to see available scopes.`,
+    [errorCode.InvalidScopePreset]: (preset) => `Invalid scope preset: "${preset}". Available presets: BASIC, RICH_PRESENCE, VOICE_CONTROL, FULL_RPC, GUILD_ACCESS, USER_PROFILE`,
+    [errorCode.ScopeValidationFailed]: (details) => `Scope validation failed: ${details}`,
+    [errorCode.InvalidScopeArray]: 'Scopes must be an array or preset name',
+    [errorCode.UnknownPresets]: (presetName, available) => `Unknown preset: ${presetName}. Available: ${available}`,
 };
 
 module.exports = errorMsg;

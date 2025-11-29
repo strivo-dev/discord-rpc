@@ -7,46 +7,27 @@
 
 'use strict';
 
-class RpcClientOptions extends Object {
-    constructor(transport) {
-        /**
-         * @param {string} transport
-         * RPC transport. one of `ipc` or `websocket`
-         * You must provide a transport
-         */
-        this.transport = transport;
-    };
-};
-
-class RpcLoginOptions extends Object {
-    constructor(clientId, clientSecret, accessToken, rpcToken, tokenEndpoint, scopes) {
-        /**
-         * @param {string} clientId Client ID
-         */
+class RpcLoginOptions {
+    /**
+     * @param {Object} options - Login options
+     * @param {string} options.clientId - Client ID
+     * @param {string} [options.clientSecret] - Client secret
+     * @param {string} [options.accessToken] - Access token
+     * @param {string} [options.rpcToken] - RPC token
+     * @param {string} [options.tokenEndpoint] - Token endpoint
+     * @param {string[]} [options.scopes] - Scopes to authorize with
+     */
+    constructor({ clientId, clientSecret, accessToken, rpcToken, tokenEndpoint, scopes, enableMetrics } = {}) {
         this.clientId = clientId;
-        /**
-         * @param {string} clientSecret Client secret
-         */
         this.clientSecret = clientSecret;
-        /**
-         * @param {string} accessToken Access token
-         */
         this.accessToken = accessToken;
-        /**
-         * @param {string} rpcToken RPC token
-         */
         this.rpcToken = rpcToken;
-        /**
-         * @param {string} tokenEndpoint Token endpoint
-         */
         this.tokenEndpoint = tokenEndpoint;
-        /**
-         * @param {string[]} scopes Scopes to authorize with
-         */
         this.scopes = scopes;
-    };
-};
+        this.enableMetrics = enableMetrics;
+    }
+}
+
 module.exports = {
-    RpcClientOptions,
-    RpcLoginOptions
+    RpcLoginOptions,
 };

@@ -17,7 +17,7 @@ afterEach(() => {
 // Test code
 describe('Discord RPC Tests', () => {
     test('Test IPC RPC', async () => {
-        const Id = '1314548864682037259';
+        const Id = '123456789012345678';
         const client = new RpcClient();
 
         register(Id);
@@ -27,7 +27,7 @@ describe('Discord RPC Tests', () => {
             console.log('Logged in as', client.application);
             console.log('Authed for user', client.user);
 
-            client.setActivity({ state: 'it work!!!', details: 'Testing Strivo RPC', startTimestamp: Date.now() });
+            client.setActivity({ state: 'it work!!!', details: 'Testing Discord RPC', startTimestamp: Date.now() });
         });
 
         await new Promise(resolve => setTimeout(resolve, 3000));

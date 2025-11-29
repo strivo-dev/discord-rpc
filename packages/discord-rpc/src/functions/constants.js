@@ -7,17 +7,13 @@
 
 'use strict';
 
-function keyMirror(arr) {
-  const tmp = {};
-  for (const value of arr) {
-    tmp[value] = value;
-  };
-  return tmp;
-};
+// Simplified keyMirror using Object.fromEntries
+const keyMirror = (arr) => Object.fromEntries(arr.map(v => [v, v]));
 
 exports.browser = typeof window !== 'undefined';
 
-exports.RPCCommands = keyMirror([
+// Using const for immutable command sets
+exports.RPCCommands = Object.freeze(keyMirror([
   'DISPATCH',
   'AUTHORIZE',
   'AUTHENTICATE',
@@ -80,9 +76,9 @@ exports.RPCCommands = keyMirror([
   'NETWORKING_CREATE_TOKEN',
   'SET_USER_ACHIEVEMENT',
   'GET_USER_ACHIEVEMENTS',
-]);
+]));
 
-exports.RPCEvents = keyMirror([
+exports.RPCEvents = Object.freeze(keyMirror([
   'CURRENT_USER_UPDATE',
   'GUILD_STATUS',
   'GUILD_CREATE',
@@ -121,9 +117,9 @@ exports.RPCEvents = keyMirror([
   'USER_ACHIEVEMENT_UPDATE',
   'READY',
   'ERROR',
-]);
+]));
 
-exports.RPCErrors = {
+exports.RPCErrors = Object.freeze({
   CAPTURE_SHORTCUT_ALREADY_LISTENING: 5004,
   GET_GUILD_TIMED_OUT: 5002,
   INVALID_ACTIVITY_JOIN_REQUEST: 4012,
@@ -155,9 +151,9 @@ exports.RPCErrors = {
   TRANSACTION_ABORTED: 1002,
   UNAUTHORIZED_FOR_ACHIEVEMENT: 5010,
   UNKNOWN_ERROR: 1000,
-};
+});
 
-exports.RPCCloseCodes = {
+exports.RPCCloseCodes = Object.freeze({
   CLOSE_NORMAL: 1000,
   CLOSE_UNSUPPORTED: 1003,
   CLOSE_ABNORMAL: 1006,
@@ -167,25 +163,25 @@ exports.RPCCloseCodes = {
   TOKEN_REVOKED: 4003,
   INVALID_VERSION: 4004,
   INVALID_ENCODING: 4005,
-};
+});
 
-exports.LobbyTypes = {
+exports.LobbyTypes = Object.freeze({
   PRIVATE: 1,
   PUBLIC: 2,
-};
+});
 
-exports.RelationshipTypes = {
+exports.RelationshipTypes = Object.freeze({
   NONE: 0,
   FRIEND: 1,
   BLOCKED: 2,
   PENDING_INCOMING: 3,
   PENDING_OUTGOING: 4,
   IMPLICIT: 5,
-};
+});
 
-exports.ActivityType = {
+exports.ActivityType = Object.freeze({
   Playing: 0,
   Listening: 2,
   Watching: 3,
   Competing: 5,
-}
+});

@@ -7,6 +7,4 @@
 
 'use strict';
 
-module.exports = {
-  ipc: require('./ipc'),
-};
+module.exports = require('./ipc');

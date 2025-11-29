@@ -8,20 +8,28 @@
 'use strict';
 
 const util = require('./functions/util');
+const RpcClient = require('./functions/client');
+const { ActivityType } = require('./functions/constants');
+const { RPCScopes, ScopePresets, ScopeHelper } = require('./functions/scopes');
 
-// Rpc Main Classes
+// RPC Main Class
 module.exports = {
-    RpcClient: require('./functions/client'),
-    ActivityType: require('./functions/constants').ActivityType,
+    // Client
+    RpcClient,
+
+    // Activity
+    ActivityType,
+
+    // Scopes
+    RPCScopes,
+    ScopePresets,
+    ScopeHelper,
+
+    // Utility
     register(id) {
         return util.register(`discord-${id}`);
     },
 };
 
-// Errors
-exports.AfkError = require('./error/errorBase').AfkError;
-exports.AfkTypeError = require('./error/errorBase').AfkTypeError;
-exports.errorCode = require('./error/errorCode');
-
 // discord-rpc versions
-exports.versions = `${require("../package.json").version}`;
+module.exports.version = `${require("../package.json").version}`;

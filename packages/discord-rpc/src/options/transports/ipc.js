@@ -71,43 +71,48 @@ async function findEndpoint(tries = 0) {
 
 function encode(op, data) {
   data = JSON.stringify(data);
+
   const len = Buffer.byteLength(data);
-  const packet = Buffer.alloc(8 + len);
+  const packet = Buffer.allocUnsafe(8 + len);
+
   packet.writeInt32LE(op, 0);
   packet.writeInt32LE(len, 4);
   packet.write(data, 8, len);
   return packet;
 };
 
-const working = {
-  full: '',
-  op: undefined,
-};
+const socketState = new WeakMap();
 
 function decode(socket, callback) {
   const packet = socket.read();
-  if (!packet) {
-    return;
-  };
+  if (!packet) return;
 
-  let { op } = working;
+  // Get or initialize state for this socket
+  let state = socketState.get(socket);
+  if (!state) {
+    state = { full: '', op: undefined };
+    socketState.set(socket, state);
+  }
+
+  let { op } = state;
   let raw;
-  if (working.full === '') {
-    op = working.op = packet.readInt32LE(0);
+
+  if (state.full === '') {
+    op = state.op = packet.readInt32LE(0);
     const len = packet.readInt32LE(4);
     raw = packet.slice(8, len + 8);
   } else {
     raw = packet.toString();
-  };
+  }
 
   try {
-    const data = JSON.parse(working.full + raw);
-    callback({ op, data }); // eslint-disable-line callback-return
-    working.full = '';
-    working.op = undefined;
+    const data = JSON.parse(state.full + raw);
+    callback({ op, data });
+    state.full = '';
+    state.op = undefined;
   } catch (err) {
-    working.full += raw;
-  };
+    state.full += raw;
+  }
 
   decode(socket, callback);
 };
@@ -160,6 +165,7 @@ class IPCTransport extends EventEmitter {
   };
 
   onClose(e) {
+    socketState.delete(this.socket); // Cleanup state
     this.emit('close', e);
   };
 

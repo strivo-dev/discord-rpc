@@ -21,6 +21,11 @@
  * @property {'ConnectionFailed'} ConnectionFailed
  * @property {'MissingEndpoint'} MissingEndpoint
  * @property {'FailLoadProtocol'} FailLoadProtocol
+ * @property {'InvalidScope'} InvalidScope
+ * @property {'InvalidScopePreset'} InvalidScopePreset
+ * @property {'ScopeValidationFailed'} ScopeValidationFailed
+ * @property {'InvalidScopeArray'} InvalidScopeArray
+ * @property {'UnknownPresets'} UnknownPresets
  */
 
 const keys = [
@@ -35,6 +40,11 @@ const keys = [
     'ConnectionFailed',
     'MissingEndpoint',
     'FailLoadProtocol',
+    'InvalidScope',
+    'InvalidScopePreset',
+    'ScopeValidationFailed',
+    'InvalidScopeArray',
+    'UnknownPresets',
 ];
 
 /**
