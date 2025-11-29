@@ -14,3 +14,4 @@ typings/index.d.mts
 
 # Ignored Tests
 test-node.js
+debug.js

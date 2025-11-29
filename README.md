@@ -78,7 +78,7 @@ client.destroy();
 
 ```
 This Project under MIT License
-© 2019 - 2024 Strivo Development. All Rights Reserved
+© 2019 - 2025 Strivo Development. All Rights Reserved
 ```
 
 [discord-rpc]: https://github.com/discordjs/RPC
